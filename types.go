@@ -1,21 +1,22 @@
 // Package clearing is the official Go SDK for the Clearing economic-principal
 // (EPID) service. It composes self-contained primitives (resilient resolution,
-// F4 RS256 signing, canonical-kind taxonomy — all vendored under internal/) into
-// three capability tiers with a uniform shape across the Go / Python /
-// TypeScript SDKs:
+// RSA request signing, and the canonical-kind taxonomy — all vendored under
+// internal/) into three capability tiers with a uniform shape across the Go /
+// Python / TypeScript SDKs:
 //
-//	L1 ResolveClient — read: Resolve / GetByEPID / Kinds (epidclient resilience)
-//	L2 SourceClient  — register: Ensure / Link / Affiliate (F4 RS256 auto-sign)
-//	L3 UnifyClient   — unify: ProveKey / SubmitVerifiedAttr / Bind / LinkRealm
+//	L1 ResolveClient — read:     Resolve / GetByEPID / Kinds (cache + breaker)
+//	L2 SourceClient  — register: Ensure / Link / Affiliate (auto request signing)
+//	L3 UnifyClient   — unify:    ProveKey / SubmitVerifiedAttr / Bind / LinkRealm
 //
-// Tier == permission boundary: constructing L2/L3 requires a source identity +
-// private key, so an ordinary read-only consumer cannot obtain the dangerous
-// write/unify handles from the type system alone (AC-SDK-SURFACE-002).
+// The tier is the permission boundary: constructing L2 or L3 requires a source
+// identity and a private key, so an ordinary read-only consumer cannot obtain
+// the write/unify handles from the type system alone.
 //
-// The SDK hides every signing footgun the protocol exposes: the three F4
-// headers (X-Clearing-Source / -Signature / -Timestamp), base64(std) encoding,
-// Ed25519 vs RSA usage, the challenge fetch→sign→submit dance, and the
-// verified-attr "verifier_sig is signed over the body WITHOUT itself" rule.
+// The SDK hides the signing details the wire protocol exposes: the three signing
+// headers (X-Clearing-Source / X-Clearing-Signature / X-Clearing-Timestamp),
+// base64(std) encoding, Ed25519 vs RSA usage, the challenge fetch->sign->submit
+// flow, and the rule that an attribute assertion's verifier_sig is signed over
+// the request body excluding the verifier_sig field itself.
 package clearing
 
 import (
@@ -29,10 +30,10 @@ import (
 // Integration tests compare it against the live server info.version for compat.
 const ContractVersion = "1.0.0"
 
-// Identity is the external identity natural key (realm is NOT part of the key,
-// invariant F1). It mirrors epidclient.Identity field-for-field.
+// Identity is the external identity natural key (the realm is not part of the
+// key).
 type Identity struct {
-	AuthInstanceID string // issuing auth instance (= F4 source_id on writes)
+	AuthInstanceID string // issuing auth instance (used as the source id on signed writes)
 	Kind           string // external kind (user/agent/client/realm/provider...)
 	Key            string // stable principal key within that auth instance
 }
@@ -87,11 +88,11 @@ type Options struct {
 	OpenTimeout      time.Duration
 
 	// HTTPClient is used by L2/L3 (and L1's HTTP backend). Defaults to a client
-	// with WriteTimeout. Injected so tests can stub transport (U3).
+	// with WriteTimeout. Injected so tests can stub the transport.
 	HTTPClient *http.Client
 	// WriteTimeout bounds L2/L3 calls when HTTPClient is not supplied (default 5s).
 	WriteTimeout time.Duration
-	// Now is an injectable clock (timestamps + resilience). Defaults to time.Now (U3).
+	// Now is an injectable clock (timestamps + resilience). Defaults to time.Now.
 	Now func() time.Time
 }
 

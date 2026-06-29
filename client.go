@@ -7,7 +7,7 @@ import (
 )
 
 // ClearingClient is the unified facade. Which tiers are non-nil depends on the
-// constructor used, so capability == construction credential (AC-SDK-SURFACE-002):
+// constructor used, so capability is bound to the construction credential:
 //
 //	NewReadOnly  -> L1 only
 //	NewSource    -> L1 + L2
@@ -21,16 +21,16 @@ type ClearingClient struct {
 // Version returns the OpenAPI contract version this SDK targets.
 func (c *ClearingClient) Version() string { return ContractVersion }
 
-// NewReadOnly builds an L1-only client. Ordinary consumers (billing, jetagents,
-// frontends) use this; the type system denies them L2/L3 (both stay nil).
+// NewReadOnly builds an L1-only client. Ordinary read-only consumers use this;
+// the type system denies them L2/L3 (both stay nil).
 func NewReadOnly(baseURL string, opt Options) *ClearingClient {
 	return &ClearingClient{L1: newResolveClient(baseURL, opt)}
 }
 
-// NewSource builds an L1+L2 client for an authenticated event source (auth,
-// model-lake provider). It requires the source identity + RSA private key.
+// NewSource builds an L1+L2 client for an authenticated event source. It
+// requires the source identity + RSA private key.
 func NewSource(baseURL, sourceID string, priv *rsa.PrivateKey, opt Options) *ClearingClient {
-	signer := &f4signer{sourceID: sourceID, priv: priv}
+	signer := &requestSigner{sourceID: sourceID, priv: priv}
 	tr := newTransport(baseURL, opt)
 	return &ClearingClient{
 		L1: newResolveClient(baseURL, opt),
@@ -38,11 +38,11 @@ func NewSource(baseURL, sourceID string, priv *rsa.PrivateKey, opt Options) *Cle
 	}
 }
 
-// NewUnify builds a full L1+L2+L3 client for a unification orchestrator
-// (jetforge, auth). It requires the source identity + RSA private key (used for
-// verified-attr verifier_sig and realm-link F4 transport signing).
+// NewUnify builds a full L1+L2+L3 client for a unification orchestrator. It
+// requires the source identity + RSA private key (used for the verified-attr
+// verifier_sig and realm-link request signing).
 func NewUnify(baseURL, sourceID string, priv *rsa.PrivateKey, opt Options) *ClearingClient {
-	signer := &f4signer{sourceID: sourceID, priv: priv}
+	signer := &requestSigner{sourceID: sourceID, priv: priv}
 	tr := newTransport(baseURL, opt)
 	return &ClearingClient{
 		L1: newResolveClient(baseURL, opt),

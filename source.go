@@ -7,11 +7,11 @@ import (
 )
 
 // SourceClient is the L2 registration tier. Only an authenticated event source
-// (e.g. auth, model-lake provider) constructs it, because it requires the source
-// identity + RSA private key. Every write is F4-signed automatically.
+// constructs it, because it requires the source identity + RSA private key.
+// Every write is source-signed automatically.
 type SourceClient struct {
 	tr     *transport
-	signer *f4signer
+	signer *requestSigner
 }
 
 // Ensure idempotently adopts an external identity as an economic principal and
@@ -33,7 +33,7 @@ func (c *SourceClient) Ensure(ctx context.Context, id Identity) (Ensured, error)
 	return Ensured{EPID: out.EPID, CanonicalKind: out.CanonicalKind, Created: out.Created}, nil
 }
 
-// Link attaches an unregistered identity to an existing EPID (F4-signed).
+// Link attaches an unregistered identity to an existing EPID (source-signed).
 func (c *SourceClient) Link(ctx context.Context, id Identity, targetEPID string) error {
 	body, err := marshalIdentity(id, targetEPID)
 	if err != nil {
@@ -43,7 +43,7 @@ func (c *SourceClient) Link(ctx context.Context, id Identity, targetEPID string)
 }
 
 // Affiliate writes an economically-neutral relation (member_of / accountable_for)
-// between two principals (F4-signed).
+// between two principals (source-signed).
 func (c *SourceClient) Affiliate(ctx context.Context, subjectEPID, relation, targetEPID string) error {
 	body, err := json.Marshal(map[string]string{
 		"subject_epid": subjectEPID,
@@ -58,10 +58,10 @@ func (c *SourceClient) Affiliate(ctx context.Context, subjectEPID, relation, tar
 
 // RotateKey swaps the signing private key (key rotation; ensure is idempotent so
 // re-signing after rotation is safe).
-func (c *SourceClient) RotateKey(s f4signer) { c.signer.priv = s.priv }
+func (c *SourceClient) RotateKey(s requestSigner) { c.signer.priv = s.priv }
 
 // marshalIdentity builds the ensure/link body. targetEPID != "" adds target_epid
-// (link). Field names exactly match the server DTO (dto.go).
+// (link). Field names exactly match the server's request schema.
 func marshalIdentity(id Identity, targetEPID string) ([]byte, error) {
 	m := map[string]string{
 		"auth_instance_id": id.AuthInstanceID,

@@ -9,7 +9,7 @@ import (
 )
 
 // Stable SDK error sentinels. Consumers branch on these (errors.Is) to choose
-// fail-open/closed; the SDK never silently fabricates a fallback (U4).
+// fail-open/closed; the SDK never silently fabricates a fallback.
 var (
 	// ErrNotRegistered: the principal/identity is authoritatively absent (404).
 	// Re-exported from epidclient so L1 and L2/L3 share one sentinel.
@@ -53,8 +53,8 @@ func (e *APIError) Is(target error) bool { return errors.Is(e.class, target) }
 func mapErr(err error) error { return err }
 
 // classifyStatus maps an HTTP status + envelope code to an APIError whose class
-// is one of the SDK sentinels. Single source of status→sentinel truth (U2),
-// aligned with the server's writeRegistryError / writeUnifyError mappings.
+// is one of the SDK sentinels — the single source of status->sentinel truth,
+// aligned with the server's error-response mappings.
 func classifyStatus(status int, code, detail string) error {
 	var class error
 	switch status {

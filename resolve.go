@@ -8,7 +8,7 @@ import (
 
 // ResolveClient is the L1 read tier. It is a thin facade over epidclient.Client
 // (cache + single-flight + circuit breaker), so it inherits the resilience and
-// degradation semantics verified there — no rewrite (AC-GOSDK-001).
+// degradation semantics implemented there.
 type ResolveClient struct {
 	inner *epidclient.Client
 	kinds *kindsCache

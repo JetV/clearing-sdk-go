@@ -9,8 +9,8 @@ import (
 )
 
 // kindsCache caches GET /v1/kinds. On an unreachable server it falls back to the
-// compiled-in canonicalkind mapping and flags the result degraded (U4) — the
-// server remains authoritative; the fallback is a last resort with a TTL.
+// compiled-in canonical-kind mapping and flags the result degraded — the server
+// remains authoritative; the fallback is a last resort with a TTL.
 type kindsCache struct {
 	ttl time.Duration
 	now func() time.Time

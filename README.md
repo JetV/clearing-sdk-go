@@ -8,8 +8,8 @@ Official Go SDK for the **Clearing** economic-principal (EPID) service.
 Clearing assigns every economic principal — humans, services, agents,
 organizations, and providers — a stable **EPID** and a canonical kind, and exposes
 signed, auditable operations for resolution, sourced writes, and identity
-unification. This module is **self-contained**: the resilient resolver, the F4
-RS256 signing primitive, and the canonical-kind taxonomy are all vendored under
+unification. This module is **self-contained**: the resilient resolver, the RSA
+request-signing primitive, and the canonical-kind taxonomy are all vendored under
 `internal/`, so it has no dependency on any private repository.
 
 ## Install
@@ -32,7 +32,7 @@ handles from the type system alone.
 | Tier | Constructor | Capability |
 | --- | --- | --- |
 | L1 — read | `NewReadOnly(baseURL, opt)` | `Resolve` / `GetByEPID` / `Kinds` (cache + circuit breaker) |
-| L2 — source | `NewSource(baseURL, sourceID, rsaKey, opt)` | F4-signed `Ensure` / `Link` / `Affiliate` |
+| L2 — source | `NewSource(baseURL, sourceID, rsaKey, opt)` | source-signed `Ensure` / `Link` / `Affiliate` |
 | L3 — unify | `NewUnify(baseURL, sourceID, rsaKey, opt)` | `ProveKey` / `SubmitVerifiedAttr` / `Bind` / `LinkRealm` |
 
 ## Quick start (L1, read-only)
@@ -84,14 +84,14 @@ case errors.Is(err, clearing.ErrUnavailable):
 
 ## Canonical JSON and signing
 
-For F4 (L2) and unify (L3) operations the SDK produces deterministic canonical
-JSON (sorted keys, no insignificant whitespace, Go `encoding/json` HTML escaping)
-and signs it with RS256 (RSA-PKCS1v15 + SHA-256), base64-std. The three F4
-transport headers (`X-Clearing-Source`, `X-Clearing-Signature`,
-`X-Clearing-Timestamp`), the Ed25519 challenge dance, and the
-"verifier_sig is signed over the body without itself" rule are all handled for
-you. Signatures byte-match the cross-language golden vectors shared by the Go /
-Python / TypeScript SDKs.
+For source-signed writes (L2) and unify (L3) operations the SDK produces
+deterministic canonical JSON (sorted keys, no insignificant whitespace, Go
+`encoding/json` HTML escaping) and signs it with RS256 (RSA-PKCS1v15 + SHA-256),
+base64-std. The three signing headers (`X-Clearing-Source`,
+`X-Clearing-Signature`, `X-Clearing-Timestamp`), the Ed25519 challenge flow, and
+the rule that an attribute assertion's `verifier_sig` is signed over the body
+excluding itself are all handled for you. Signatures byte-match the
+cross-language golden vectors shared by the Go / Python / TypeScript SDKs.
 
 ## Versioning
 

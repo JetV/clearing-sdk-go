@@ -31,8 +31,8 @@ func genRSA(t *testing.T) *rsa.PrivateKey {
 
 func fixedNow() time.Time { return time.Unix(1700000000, 0) }
 
-// AC-SDK-SURFACE-002: capability == construction credential. Read-only callers
-// cannot obtain L2/L3 handles from the type system.
+// Capability is bound to the construction credential: read-only callers cannot
+// obtain L2/L3 handles from the type system.
 func TestTierIsolation(t *testing.T) {
 	priv := genRSA(t)
 
@@ -53,10 +53,9 @@ func TestTierIsolation(t *testing.T) {
 	require.Equal(t, ContractVersion, uni.Version())
 }
 
-// AC-GOSDK-002: L2 writes carry the THREE F4 headers (source + base64-std
-// signature that verifies + fresh timestamp). Locks the two spec/reality fixes
-// (correct header name; timestamp present).
-func TestSourceEnsureF4Headers(t *testing.T) {
+// L2 writes carry the three source-signing headers (source id + base64-std
+// signature that verifies + fresh timestamp).
+func TestSourceEnsureSignedHeaders(t *testing.T) {
 	priv := genRSA(t)
 	var gotSource, gotSig, gotTS string
 	var gotBody []byte
@@ -187,8 +186,8 @@ func TestKeyProofOrchestration(t *testing.T) {
 	require.True(t, ed25519.Verify(pub, []byte("chal123"), sig), "ed25519 sig must verify over challenge")
 }
 
-// AC-GOSDK-001: L1 inherits epidclient resilience — 503 → ErrUnavailable and the
-// breaker opens (later calls fail fast without hitting the backend).
+// L1 inherits the resilient resolver: 503 -> ErrUnavailable and the breaker
+// opens (later calls fail fast without hitting the backend).
 func TestResolveResilienceAndDegradation(t *testing.T) {
 	var hits int
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -264,15 +263,15 @@ func TestKindsServerFirstThenFallback(t *testing.T) {
 	require.True(t, dead.L1.kinds.Degraded())
 }
 
-// AC-GOSDK-002 conformance: the SDK transport's F4 signature byte-matches the
-// frozen cross-language golden vectors.
+// Conformance: the SDK transport's request signature byte-matches the frozen
+// cross-language golden vectors.
 func TestTransportMatchesGoldenVectors(t *testing.T) {
 	dir := filepath.Join("testdata", "vectors")
 	suite, err := contract.Load(dir)
 	require.NoError(t, err)
-	require.NotEmpty(t, suite.F4Sign)
+	require.NotEmpty(t, suite.SignedWrite)
 
-	for _, v := range suite.F4Sign {
+	for _, v := range suite.SignedWrite {
 		t.Run(v.Name, func(t *testing.T) {
 			priv, err := contract.LoadRSAPriv(filepath.Join(dir, v.RSAPrivPEMRef))
 			require.NoError(t, err)
@@ -285,7 +284,7 @@ func TestTransportMatchesGoldenVectors(t *testing.T) {
 			defer srv.Close()
 
 			tr := newTransport(srv.URL, Options{Now: fixedNow})
-			signer := &f4signer{sourceID: "auth.local", priv: priv}
+			signer := &requestSigner{sourceID: "auth.local", priv: priv}
 			require.NoError(t, tr.postJSON(context.Background(), "/x", []byte(v.Body), signer, nil))
 			require.Equal(t, v.ExpectedSigB64, gotSig, "SDK transport signature must match golden vector %s", v.Name)
 		})

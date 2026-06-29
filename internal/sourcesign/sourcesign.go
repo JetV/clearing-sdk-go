@@ -1,13 +1,10 @@
-// Package sourcesign is the single source of truth for F4 federated write-auth
-// signing: deterministic canonical JSON + RS256 (RSA-PKCS1v15 + SHA-256)
-// sign/verify.
+// Package sourcesign implements source-signed write authentication:
+// deterministic canonical JSON plus RS256 (RSA-PKCS1v15 + SHA-256) sign/verify.
 //
-// Both clearing (server-side verification, internal/sourceauth) and external
-// issuing sources (e.g. the auth service in CHP-004) import this exact package,
-// so the bytes that get signed are identical across repositories. Re-implementing
-// the canonicalization on the source side is the #1 byte-drift risk for F4
-// (Go's encoding/json HTML-escaping, key ordering, number handling); sharing one
-// implementation eliminates it (CHP-004 audit H1).
+// The signer and the verifier must agree on the exact bytes that get signed, so
+// the canonicalization here (Go encoding/json HTML escaping, sorted keys, number
+// fidelity) is the single source of truth. Re-implementing it elsewhere is the
+// primary byte-drift risk; sharing this one implementation eliminates it.
 package sourcesign
 
 import (

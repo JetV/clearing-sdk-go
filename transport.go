@@ -15,9 +15,8 @@ import (
 	"github.com/JetV/clearing-sdk-go/internal/sourcesign"
 )
 
-// F4 source-signed write headers (mirror internal/features/middleware.go — the
-// authoritative server contract; the CHP-005 sketch used the wrong source header
-// name and omitted the timestamp, both corrected here).
+// Source-signed write headers, per the server's wire contract: the source id,
+// the RSA signature over the request body, and a fresh unix timestamp.
 const (
 	headerSource    = "X-Clearing-Source"
 	headerSignature = "X-Clearing-Signature"
@@ -32,11 +31,11 @@ type transport struct {
 	now     func() time.Time
 }
 
-// postJSON sends body to path. If priv != "" sourceID, it adds the three F4
-// headers (RS256 over the raw body, base64-std, plus a fresh unix timestamp).
-// out (if non-nil) is JSON-decoded from a 200 body. Non-2xx is classified via
-// the server error envelope.
-func (t *transport) postJSON(ctx context.Context, path string, body []byte, signer *f4signer, out any) error {
+// postJSON sends body to path. When a signer is supplied it adds the three
+// source-signing headers (RS256 over the raw body, base64-std, plus a fresh
+// unix timestamp). out (if non-nil) is JSON-decoded from a 200 body. A non-2xx
+// response is classified via the server error envelope.
+func (t *transport) postJSON(ctx context.Context, path string, body []byte, signer *requestSigner, out any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, t.baseURL+path, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("%w: build request: %v", ErrInvalid, err)
@@ -94,8 +93,9 @@ func decodeEnvelope(raw []byte) (code, detail string) {
 	return env.Error, env.Detail
 }
 
-// f4signer binds a source identity to its RSA private key for F4 write-auth.
-type f4signer struct {
+// requestSigner binds a source identity to its RSA private key for
+// source-signed writes.
+type requestSigner struct {
 	sourceID string
 	priv     *rsa.PrivateKey
 }

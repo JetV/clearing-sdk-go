@@ -1,14 +1,12 @@
-// Package contract is the Go reference implementation for CHP-005 cross-language
-// golden vectors. It owns the canonical layout of clearing/contract/vectors/*
-// and the single computation path (canonical JSON + RS256 + Ed25519) that the
-// generator (cmd/gen-contract) freezes and that every language SDK must
-// reproduce byte-for-byte.
+// Package contract is the Go reference implementation for the cross-language
+// golden vectors. It owns the layout of the vectors directory and the single
+// computation path (canonical JSON + RS256 + Ed25519) that every language SDK
+// (Go, Python, TypeScript) must reproduce byte-for-byte.
 //
-// The Go side never hand-edits expected_sig_b64 / canonical / expected_*_b64:
-// those are derived here from the input body/seed via pkg/sourcesign (the one
-// F4 implementation) and pure crypto/ed25519, then committed. The freeze test
-// (test/contract) re-derives and asserts equality, so the committed vectors can
-// never drift from the reference implementation (U1-M2 / U2 contract-freeze).
+// The expected values (expected_sig_b64 / canonical / expected_*_b64) are
+// derived here from the input body/seed via the sourcesign package and the
+// standard crypto/ed25519, never hand-edited, so the committed vectors cannot
+// drift from this reference implementation.
 package contract
 
 import (
@@ -30,10 +28,10 @@ import (
 
 // File names under the vectors directory (single source of those names).
 const (
-	CanonicalFile = "canonical.json"
-	F4SignFile    = "f4_sign.json"
-	Ed25519File   = "ed25519_challenge.json"
-	TestKeysDir   = "testkeys"
+	CanonicalFile   = "canonical.json"
+	SignedWriteFile = "signed_write.json"
+	Ed25519File     = "ed25519_challenge.json"
+	TestKeysDir     = "testkeys"
 )
 
 // FrozenServerURL is the placeholder server URL baked into the frozen
@@ -43,8 +41,8 @@ const (
 const FrozenServerURL = "http://clearing.internal:11020"
 
 // ErrFloatInSignedBody is returned when a signed body contains a JSON float.
-// CHP-005 forbids floats in signed bodies (cross-language precision drift): use
-// integer minor units or strings. canonical-only vectors may still carry them.
+// Floats are forbidden in signed bodies (cross-language precision drift): use
+// integer minor units or strings. Canonical-only vectors may still carry them.
 var ErrFloatInSignedBody = errors.New("contract: float not allowed in signed body")
 
 // CanonicalVector pins body -> expected canonical bytes (3 rules: sorted keys,
@@ -56,9 +54,9 @@ type CanonicalVector struct {
 	Canonical string          `json:"canonical"`
 }
 
-// F4SignVector pins body -> RS256(base64-std) over canonical(body), signed with
-// the referenced fixed test RSA key.
-type F4SignVector struct {
+// SignedWriteVector pins body -> RS256(base64-std) over canonical(body), signed
+// with the referenced fixed test RSA key.
+type SignedWriteVector struct {
 	Name           string          `json:"name"`
 	Body           json.RawMessage `json:"body"`
 	Canonical      string          `json:"canonical"`
@@ -78,10 +76,10 @@ type Ed25519Vector struct {
 
 // Suite is the full loaded vector set.
 type Suite struct {
-	Dir       string
-	Canonical []CanonicalVector
-	F4Sign    []F4SignVector
-	Ed25519   []Ed25519Vector
+	Dir         string
+	Canonical   []CanonicalVector
+	SignedWrite []SignedWriteVector
+	Ed25519     []Ed25519Vector
 }
 
 // Load reads all vector files from dir (the vectors directory).
@@ -90,7 +88,7 @@ func Load(dir string) (*Suite, error) {
 	if err := readJSON(filepath.Join(dir, CanonicalFile), &s.Canonical); err != nil {
 		return nil, err
 	}
-	if err := readJSON(filepath.Join(dir, F4SignFile), &s.F4Sign); err != nil {
+	if err := readJSON(filepath.Join(dir, SignedWriteFile), &s.SignedWrite); err != nil {
 		return nil, err
 	}
 	if err := readJSON(filepath.Join(dir, Ed25519File), &s.Ed25519); err != nil {
@@ -120,9 +118,9 @@ func ComputeCanonical(body []byte) (string, error) {
 	return string(canon), nil
 }
 
-// ComputeF4Sig returns base64(std) RS256 over canonical(body) using the test
-// RSA key at dir/ref. Rejects floats in the signed body (precision drift guard).
-func ComputeF4Sig(dir, ref string, body []byte) (string, error) {
+// ComputeSignedWriteSig returns base64(std) RS256 over canonical(body) using the
+// test RSA key at dir/ref. Rejects floats in the signed body (precision guard).
+func ComputeSignedWriteSig(dir, ref string, body []byte) (string, error) {
 	if err := rejectFloat(body); err != nil {
 		return "", err
 	}

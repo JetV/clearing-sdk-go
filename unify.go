@@ -12,23 +12,24 @@ import (
 	"github.com/JetV/clearing-sdk-go/internal/sourcesign"
 )
 
-// Unify purpose constants (mirror internal/unify.Purpose*; wire contract).
+// Unify purpose constants, per the server's wire contract.
 const (
 	purposeKeyProof = "key-proof"
 )
 
 // UnifyClient is the L3 unification tier. It orchestrates the challenge
-// fetch→sign→submit dance and hides the Ed25519/RSA + base64(std) footguns.
-// It holds the source RSA key (for verified-attr verifier_sig and realm-link F4)
-// — so, like L2, only an authenticated source/orchestrator can construct it.
+// fetch->sign->submit flow and hides the Ed25519/RSA + base64(std) details.
+// It holds the source RSA key (for the verified-attr verifier_sig and realm-link
+// request signing) — so, like L2, only an authenticated source/orchestrator can
+// construct it.
 type UnifyClient struct {
 	tr     *transport
-	signer *f4signer // RSA source key (verifier_sig + realm-link F4 transport sig)
+	signer *requestSigner // RSA source key (verifier_sig + realm-link request signing)
 }
 
 // ProveKey deduplicates by key control: it fetches a key-proof challenge, signs
 // it with edPriv, and submits public key + fingerprint + signature. Same key
-// across sources => same principal. No source assertion involved (AC-UNI-001).
+// across sources => same principal. No source assertion is involved.
 func (c *UnifyClient) ProveKey(ctx context.Context, epid string, edPriv ed25519.PrivateKey) (DedupResult, error) {
 	ch, err := c.challenge(ctx, epid, purposeKeyProof)
 	if err != nil {
@@ -72,7 +73,7 @@ func (c *UnifyClient) SubmitVerifiedAttr(ctx context.Context, a AttrAssertion) (
 		return DedupResult{}, fmt.Errorf("%w: sign: %v", ErrInvalid, err)
 	}
 	// Full wire body = signed fields + verifier_sig (base64 std). This endpoint is
-	// not transport-F4-signed; auth is the in-body verifier_sig.
+	// not transport-signed; auth is the in-body verifier_sig.
 	body, err := json.Marshal(map[string]any{
 		"epid":           a.EPID,
 		"attr_type":      a.AttrType,
@@ -112,9 +113,9 @@ func (c *UnifyClient) Bind(ctx context.Context, subjectEPID, targetEPID string, 
 }
 
 // LinkRealm projects an org realm identity into the org EPID. The whole request
-// is F4-signed by the realm's source (realm.AuthInstanceID must equal the signing
-// source), and admin control is proven by signing the canonical org-admin message
-// with the org's registered Ed25519 admin key.
+// is source-signed by the realm's source (realm.AuthInstanceID must equal the
+// signing source), and admin control is proven by signing the canonical
+// org-admin message with the org's registered Ed25519 admin key.
 func (c *UnifyClient) LinkRealm(ctx context.Context, orgEPID string, realm Identity, adminKey ed25519.PrivateKey) error {
 	adminPub := adminKey.Public().(ed25519.PublicKey)
 	msg := orgAdminMessage(orgEPID, realm)
@@ -181,16 +182,14 @@ func (c *UnifyClient) postDedup(ctx context.Context, path string, body []byte) (
 	return DedupResult{ActiveEPID: out.ActiveEPID, Merged: out.Merged, NeedsReview: out.NeedsReview}, nil
 }
 
-// keyFingerprint mirrors internal/unify.KeyFingerprint (wire contract): the
-// dedup anchor key_id = "sha256:" + hex(sha256(rawPubKey)). Duplicated here to
-// avoid importing internal/* (which would drag server deps into SDK consumers);
-// the integration test against the live server guards against drift.
+// keyFingerprint computes the dedup anchor key_id per the server's wire
+// contract: "sha256:" + hex(sha256(rawPubKey)).
 func keyFingerprint(rawPub []byte) string {
 	sum := sha256.Sum256(rawPub)
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-// orgAdminMessage mirrors internal/unify.orgAdminMessage (wire contract).
+// orgAdminMessage builds the canonical org-admin message per the wire contract.
 func orgAdminMessage(orgEPID string, realm Identity) string {
 	return "realm-link|" + orgEPID + "|" + realm.AuthInstanceID + "|" + realm.Kind + "|" + realm.Key
 }
