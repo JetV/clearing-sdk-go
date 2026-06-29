@@ -8,18 +8,19 @@ import (
 	"time"
 )
 
-// HTTPBackend 通过 clearing REST API 解析（POST /v1/principals/resolve）。
+// HTTPBackend resolves via the clearing REST API (POST /v1/principals/resolve).
 type HTTPBackend struct {
 	BaseURL string
 	Client  *http.Client
 }
 
-// NewHTTPBackend 构造 HTTP 后端（默认 5s 超时）。
+// NewHTTPBackend constructs an HTTP backend (default 5s timeout).
 func NewHTTPBackend(baseURL string) *HTTPBackend {
 	return &HTTPBackend{BaseURL: baseURL, Client: &http.Client{Timeout: 5 * time.Second}}
 }
 
-// ResolveByIdentity 实现 Backend：映射 404 -> ErrNotRegistered，其余失败 -> ErrUnavailable。
+// ResolveByIdentity implements Backend: it maps 404 -> ErrNotRegistered and any
+// other failure -> ErrUnavailable.
 func (h *HTTPBackend) ResolveByIdentity(ctx context.Context, id Identity) (Result, error) {
 	payload, _ := json.Marshal(map[string]string{
 		"auth_instance_id": id.AuthInstanceID,

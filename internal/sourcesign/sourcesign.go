@@ -88,7 +88,7 @@ func writeCanonical(sb *bytes.Buffer, v any) {
 	case nil:
 		sb.WriteString("null")
 	default:
-		// float64 等回退（UseNumber 后一般不会到这里）。
+		// Fallback for float64 etc. (normally unreachable after UseNumber).
 		b, _ := json.Marshal(t)
 		sb.Write(b)
 	}

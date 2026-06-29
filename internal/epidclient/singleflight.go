@@ -2,8 +2,9 @@ package epidclient
 
 import "sync"
 
-// singleflightGroup 合并对同一 key 的并发调用为一次执行（等价 golang.org/x/sync
-// 的最小子集），使本模块零运行时外部依赖。
+// singleflightGroup collapses concurrent calls for the same key into a single
+// execution (a minimal subset of golang.org/x/sync/singleflight), keeping this
+// module free of runtime external dependencies.
 type singleflightGroup struct {
 	mu sync.Mutex
 	m  map[string]*sfCall
@@ -15,8 +16,9 @@ type sfCall struct {
 	err error
 }
 
-// Do 执行并去重 fn:同一 key 的并发调用只执行一次,其余等待并共享结果。
-// 返回的 shared 表示结果是否被多个调用方共享。
+// Do executes and de-duplicates fn: concurrent calls for the same key run fn
+// only once, and the rest wait for and share the result. The returned shared
+// flag reports whether the result was shared by more than one caller.
 func (g *singleflightGroup) Do(key string, fn func() (any, error)) (val any, err error, shared bool) {
 	g.mu.Lock()
 	if g.m == nil {
