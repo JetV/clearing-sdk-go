@@ -1,0 +1,48 @@
+[
+  {
+    "name": "ensure_user_basic",
+    "body": {
+      "kind": "user",
+      "principal_key": "u-123",
+      "auth_instance_id": "auth.local"
+    },
+    "canonical": "{\"auth_instance_id\":\"auth.local\",\"kind\":\"user\",\"principal_key\":\"u-123\"}",
+    "rsa_priv_pem_ref": "testkeys/rsa_a.pem",
+    "expected_sig_b64": "pro/nBnrRotKc5/A18hRgXXuR8Mdffv5YIF1P/1cGflnbfksBX/5fLsRsVYJJzqQUc0vXUgXX0l/sQQM4Ce2zm0zsfG9psSjctm+N4ieA0+j0InsXYAxK1MAsXNldxQl4ddbxBGpGG15lHpXl3FFXQYfQsK2eL4kY5nV5vT9fCQzjI2jSwtD01y+QjG1EKv/a+gg+bW7BlWtsC2o9pGv/nvNOes+Usb7pYrgcKRcboUaIZLbFjo/y94tLDl+qn9XKz1hFkzUfKZx5kswTA0L0So56d/5lZc0ijAag/nouf5kzR5q3L5KSNfvbQdybadaaAPXEyx0q3pCR6pA0ByKMA=="
+  },
+  {
+    "name": "verified_attr",
+    "body": {
+      "epid": "ep_9",
+      "attr_type": "national_id",
+      "assurance_tier": 3,
+      "salted_hash": "naïve-哈希"
+    },
+    "canonical": "{\"assurance_tier\":3,\"attr_type\":\"national_id\",\"epid\":\"ep_9\",\"salted_hash\":\"naïve-哈希\"}",
+    "rsa_priv_pem_ref": "testkeys/rsa_a.pem",
+    "expected_sig_b64": "oDVciUXfCy8h4wGmSETN4bKLP5987OLlJJ/sT3deV7wjyqP/ZPuhS4HU5zL5c5hrghDroCBtJu/4MMnlQ/ASyMhIEdwOv4wA55Llq5CEAouitRtPctbdV7MkxiWYTmeNQUep3OwN1gwbBhY9/Y/ZlvhFGVOQ7dUje1l6lHd7n3leP2Nwd4r6yta8BWjYDDDh/p48uvVEa1PPqr5XBLU70NZnhEoTk7F8BMB4agmc0FdBbDj9WYteHTmxPVukwqzjUdKw/3rSw4uTmuASkmuE0xXCJqMMBkAOxY2wHFQBbA1P1UKs41+GeesrWneTixWFmnMwql40IAKmRDRJnGJ05g=="
+  },
+  {
+    "name": "link_request",
+    "body": {
+      "auth_instance_id": "auth.local",
+      "kind": "agent",
+      "principal_key": "ag-7",
+      "target_epid": "ep_demo_human_001"
+    },
+    "canonical": "{\"auth_instance_id\":\"auth.local\",\"kind\":\"agent\",\"principal_key\":\"ag-7\",\"target_epid\":\"ep_demo_human_001\"}",
+    "rsa_priv_pem_ref": "testkeys/rsa_a.pem",
+    "expected_sig_b64": "DuymdsnsOWqQYWLf0nipUXSdvTP7GFNckwTcwLBFUAZCL/aQ9QpVCn7HXdWt2xDffjo9aCCXUI6PcUWhPH2s3lJlGX/29x7FmO56nY9GhpQYdpdhSDDmRED7FIfVZdQWI68zvjf7B/4atazGQxO+sjt7s/Jg7dv4aLGBHOSoHorD9NRuIkuXgf7IfQyV6biLkqAfvMqlATtyhIetpNky42pCzHZcRQevynzuYJBm7vKlaZ9awjiWXh9kgDIDHB3+S1CM9SPwqNTC6oto+A2j21o4X4esdoQLZOJ5FGt7VOvrWSJsFLP8DVJFuG72XRIngYl1eKCDhBWNeqHHo4I3yg=="
+  },
+  {
+    "name": "ensure_user_basic_key_b",
+    "body": {
+      "kind": "user",
+      "principal_key": "u-123",
+      "auth_instance_id": "auth.local"
+    },
+    "canonical": "{\"auth_instance_id\":\"auth.local\",\"kind\":\"user\",\"principal_key\":\"u-123\"}",
+    "rsa_priv_pem_ref": "testkeys/rsa_b.pem",
+    "expected_sig_b64": "dMlii1ExiUIi3upvc5FxbsM8xwygDyE9NPEZtP80STBObH0oXRwsILgeBKyO2tzIU1EMnkxghuQ35Dg2obKOptE1qa29Q0BI6jjry4wTMSlBuCNixRanLor2TuaORCzMlby35XSUWii6QRN7BPoPa8WuN0+6HQX95cV+ucfjiuDVvJj77/EgIdNFXyyzL7BSxO5vkrHFFO9I/b8isyBQvm9laKyBTtG0Zc4Pfb2k4Lcb8iIv1ON1cyylkMTCcm/nzoXOMp+N1Hkgfk4dHj73UvPiF8HW4YYRPV+SXiNvPK0V9xKLs//ZRj3L/CqctsaDCEOQDGe8zZEdW8IE7icslg=="
+  }
+]

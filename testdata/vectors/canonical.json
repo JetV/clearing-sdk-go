@@ -1,0 +1,71 @@
+[
+  {
+    "name": "ensure_user_basic",
+    "body": {
+      "kind": "user",
+      "principal_key": "u-123",
+      "auth_instance_id": "auth.local"
+    },
+    "canonical": "{\"auth_instance_id\":\"auth.local\",\"kind\":\"user\",\"principal_key\":\"u-123\"}"
+  },
+  {
+    "name": "verified_attr_unicode_number",
+    "body": {
+      "epid": "ep_9",
+      "attr_type": "national_id",
+      "assurance_tier": 3,
+      "salted_hash": "naïve-哈希"
+    },
+    "canonical": "{\"assurance_tier\":3,\"attr_type\":\"national_id\",\"epid\":\"ep_9\",\"salted_hash\":\"naïve-哈希\"}"
+  },
+  {
+    "name": "nested_unsorted",
+    "body": {
+      "b": [
+        3,
+        2,
+        1
+      ],
+      "a": {
+        "z": 1,
+        "y": 2
+      }
+    },
+    "canonical": "{\"a\":{\"y\":2,\"z\":1},\"b\":[3,2,1]}"
+  },
+  {
+    "name": "bigint_precision",
+    "body": {
+      "n": 9007199254740993,
+      "k": "x"
+    },
+    "canonical": "{\"k\":\"x\",\"n\":9007199254740993}"
+  },
+  {
+    "name": "empty_object",
+    "body": {},
+    "canonical": "{}"
+  },
+  {
+    "name": "string_escapes",
+    "body": {
+      "s": "a\nb\tc\"d"
+    },
+    "canonical": "{\"s\":\"a\\nb\\tc\\\"d\"}"
+  },
+  {
+    "name": "emoji_combining",
+    "body": {
+      "note": "e\u0301mot",
+      "emoji": "🚀"
+    },
+    "canonical": "{\"emoji\":\"🚀\",\"note\":\"émot\"}"
+  },
+  {
+    "name": "html_escape",
+    "body": {
+      "s": "a\u003cb\u003ec\u0026d=e"
+    },
+    "canonical": "{\"s\":\"a\\u003cb\\u003ec\\u0026d=e\"}"
+  }
+]

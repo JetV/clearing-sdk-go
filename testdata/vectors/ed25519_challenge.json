@@ -1,0 +1,23 @@
+[
+  {
+    "name": "keyproof_zero_seed",
+    "challenge": "chal_abc.123",
+    "ed_seed_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+    "expected_sig_b64": "trGij5AHHacFnOu8O/uTnv0FN380AW5avDfZM8e3ufgOWnpWrpl2tPXjRnijWAJSX2s9PLF9ATk+dRvtpClwAQ==",
+    "expected_pub_b64": "O2onvM62pC1io6jQKm8Nc2UyFXcd4kOmOsBIoYtZ2ik="
+  },
+  {
+    "name": "keyproof_seq_seed",
+    "challenge": "Y2hhbGxlbmdlX2RlbW8=",
+    "ed_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "expected_sig_b64": "r2y9DNXPlZdZCaWda38Icd0N42L46Ot7HUm3sFaC8LhASxKhszzO/mHgjAClCytNGPqCzVh8RuerHccnOuPIAA==",
+    "expected_pub_b64": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg="
+  },
+  {
+    "name": "keyproof_unicode_challenge",
+    "challenge": "挑战-naïve-🚀",
+    "ed_seed_hex": "fedcba98765432100123456789abcdeffedcba98765432100123456789abcdef",
+    "expected_sig_b64": "bP7ZSW6oHSDfDo1W/fDsLWbGjQyZtOQN4SRSkPsd1Wvm6SPdsk+/NJzOOqM9Ih2E7VljXn6bi0znF5QHMt5ZBw==",
+    "expected_pub_b64": "vZ4tkUJd7zYjmSOd3ENJVJwojX6rCFEBUZ1/lYXrJfY="
+  }
+]
